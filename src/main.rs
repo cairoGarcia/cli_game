@@ -14,6 +14,29 @@ const BUF: Point = Point {x: 10, y: 5};
 const PREFIX: &str = "> ";
 static mut HP: i8 = 10;
 
+static SYM_LIST: [Symbol;5]= [
+    Symbol {
+        sym: '8',
+        id: "character",
+    },
+    Symbol {
+        sym: 'x',
+        id: "enemy",
+    },
+    Symbol {
+        sym: '-',
+        id: "enemy_range",
+    },
+    Symbol {
+        sym: '_',
+        id: "background",
+    },
+    Symbol {
+        sym: '~',
+        id: "error",
+    },
+    ];
+
 fn main() {
     let mut stdout = io::stdout();
     let stdin = io::stdin();
@@ -52,28 +75,35 @@ fn main() {
         location: Point { x: 1, y: 2 },
     });
 
-    let sym_list: Vec<Symbol> = vec![
-        Symbol {
-            sym: '8',
-            id: "character",
-        },
-        Symbol {
-            sym: 'x',
-            id: "enemy",
-        },
-        Symbol {
-            sym: '-',
-            id: "enemy_range",
-        },
-        Symbol {
-            sym: '_',
-            id: "background",
-        },
-        Symbol {
-            sym: '~',
-            id: "error",
-        },
-    ];
+    let render = |c: &Character, e: &Vec<Enemy>| {
+        print!("\x1B[2J\x1B[H"); /* Clears current window */
+
+        for h in 0..limits.y {
+            for w in 0..limits.x {
+                let rendered = Point { x: w, y: h };
+
+                let mut opt: &str = if c.location == rendered {
+                    "character"
+                } else if e.iter().any(|e| e.location == rendered) {
+                    "enemy"
+                } else {
+                    "none"
+                };
+
+                if opt != "none" {queryp(opt); continue}
+
+                for enemy in 0..e.len() {
+                    if path_to(&rendered, &e[enemy].location, 2) == true {
+                        opt = "enemy_range";
+                    }
+                }
+                if opt == "none" { opt = "background"}
+
+                queryp(opt);
+            }
+            print!("\n");
+        }
+    };
 
     loop {
         unsafe { character.status.hp = HP};
@@ -81,7 +111,7 @@ fn main() {
             println!("GAME OVER!");
             return;
         };
-        render(&character, &limits, &sym_list, &enemy_list);
+        render(&character, &enemy_list);
         println!(
             "x:{}, y:{}, hp: {}",
             character.location.x, character.location.y, character.status.hp
@@ -155,12 +185,12 @@ pub fn path_to(player: &Point, enemy: &Point, range: i8) -> bool {
     true
 }
 
-pub fn query(opt: &str, list: &Vec<Symbol>) -> char {
+pub fn query(opt: &str) -> char {
     let mut symbol: Option<char> = None;
 
-    for index in 0..list.len() {
-        if list[index].id == opt {
-            symbol = Some(list[index].sym);
+    for index in 0..SYM_LIST.len() {
+        if SYM_LIST[index].id == opt {
+            symbol = Some(SYM_LIST[index].sym);
             break;
         }
     }
@@ -168,42 +198,13 @@ pub fn query(opt: &str, list: &Vec<Symbol>) -> char {
     symbol.expect("sym_err:query")
 }
 
-pub fn queryp(opt: &str, list: &Vec<Symbol>) {
-    let result: &str = &query(opt, list).to_string();
+pub fn queryp(opt: &str) {
+    let result: &str = &query(opt).to_string();
     match opt {
         "character" => print!("{}", result.blue()),
-        "enemy" => print!("{}", result.red()),
+        "enemy" => print!("{}", result.blue()),
         "enemy_range" => print!("{}", result.yellow()),
         _ => print!("{}", result),
     }
 }
 
-pub fn render(character: &Character, limits: &Point, list: &Vec<Symbol>, enemy_list: &Vec<Enemy>) {
-    print!("\x1B[2J\x1B[H"); /* Clears current window */
-
-    for h in 0..limits.y {
-        for w in 0..limits.x {
-            let rendered = Point { x: w, y: h };
-
-            let mut opt: &str = if character.location == rendered {
-                "character"
-            } else if enemy_list.iter().any(|e| e.location == rendered) {
-                "enemy"
-            } else {
-                "none"
-            };
-
-            if opt != "none" {queryp(opt,list); continue}
-            
-            for enemy in 0..enemy_list.len() {
-                if path_to(&rendered, &enemy_list[enemy].location, 2) == true {
-                    opt = "enemy_range";
-                }
-            }
-            if opt == "none" { opt = "background"}
-
-            queryp(opt, list);
-        }
-        print!("\n");
-    }
-}
