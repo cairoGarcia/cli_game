@@ -5,6 +5,8 @@ mod types;
 use movements::*;
 use types::{Character, Enemy, Point, Stats, Symbol};
 
+// use serde::{Serialize, Deserialize};
+
 // use parser::{Action,parse};
 
 use std::io;
@@ -57,36 +59,13 @@ fn main() {
         location: Point { x: 1, y: 2 },
     });
 
-    let sym_list: Vec<Symbol> = vec![
-        Symbol {
-            sym: '8',
-            id: "character",
-        },
-        Symbol {
-            sym: 'x',
-            id: "enemy",
-        },
-        Symbol {
-            sym: '-',
-            id: "enemy_range",
-        },
-        Symbol {
-            sym: '_',
-            id: "background",
-        },
-        Symbol {
-            sym: '~',
-            id: "error",
-        },
-    ];
-
     loop {
         unsafe { character.status.hp = HP};
         if character.status.hp <= 0 {
             println!("GAME OVER!");
             return;
         };
-        render(&character, &limits, &sym_list, &enemy_list);
+        render(&character, &limits, &enemy_list);
         println!(
             "x:{}, y:{}, hp: {}",
             character.location.x, character.location.y, character.status.hp
@@ -184,54 +163,36 @@ pub fn path_to(player: &Point, enemy: &Point) -> i8 {
     return distance;
 }
 
-pub fn query(opt: &str, list: &Vec<Symbol>) -> char {
-    let mut symbol: Option<char> = None;
-
-    for index in 0..list.len() {
-        if list[index].id == opt {
-            symbol = Some(list[index].sym);
-            break;
-        }
-    }
-
-    symbol.expect("sym_err:query")
-}
-
-pub fn queryp(opt: &str, list: &Vec<Symbol>) {
-    let result: &str = &query(opt, list).to_string();
-    match opt {
-        "character" => print!("{}", result.blue()),
-        "enemy" => print!("{}", result.red()),
-        "enemy_range" => print!("{}", result.yellow()),
-        _ => print!("{}", result),
-    }
-}
-
-pub fn render(character: &Character, limits: &Point, list: &Vec<Symbol>, enemy_list: &Vec<Enemy>) {
+pub fn render(character: &Character, limits: &Point, enemy_list: &Vec<Enemy>) {
     print!("\x1B[2J\x1B[H"); /* Clears current window */
 
     for h in 0..limits.y {
         for w in 0..limits.x {
             let rendered = Point { x: w, y: h };
 
-            let mut opt: &str = if character.location == rendered {
-                "character"
+            let opt: Symbol = if character.location == rendered {
+                Symbol::Char
             } else if enemy_list.iter().any(|e| e.location == rendered) {
-                "enemy"
+                Symbol::Enemy
             } else {
-                "none"
+                let mut sym = Symbol::Background;
+
+                for enemy in 0..enemy_list.len() {
+                    if path_to(&rendered, &enemy_list[enemy].location) <= enemy_list[enemy].status.move_amount {
+                        sym = Symbol::EnemyRange;
+                    };
+                };
+
+                sym
             };
 
-            if opt != "none" {queryp(opt,list); continue}
-            
-            for enemy in 0..enemy_list.len() {
-                if path_to(&rendered, &enemy_list[enemy].location) <= enemy_list[enemy].status.move_amount {
-                    opt = "enemy_range";
-                }
-            }
-            if opt == "none" { opt = "background"}
-
-            queryp(opt, list);
+            print!("{}", match opt {
+                Symbol::Background => "_".normal(),
+                Symbol::EnemyRange => "x".red(),
+                Symbol::Enemy => "#".yellow(),
+                Symbol::Char => "8".blue(),
+                Symbol::Unknown => "?".black(),
+            });
         }
         print!("\n");
     }

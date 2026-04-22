@@ -46,8 +46,12 @@ pub struct Enemy {
     pub location: Point,
 }
 
-#[derive(Clone, PartialEq)]
-pub struct Symbol<'a> {
-    pub sym: char,
-    pub id: &'a str,
+#[derive(PartialEq)]
+pub enum Symbol {
+    Enemy,
+    EnemyRange,
+    Char,
+    // CharRange,
+    Background,
+    Unknown
 }
