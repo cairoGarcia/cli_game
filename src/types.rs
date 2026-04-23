@@ -13,7 +13,7 @@ pub enum Directions {
     D,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Point {
     pub x: i8,
     pub y: i8,
@@ -34,16 +34,42 @@ pub struct Stats {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Character {
+pub struct Entity {
+    pub id: u8,
+    pub kind: Kind,
     pub status: Stats,
     pub location: Point,
 }
 
+impl Entity {
+    // Movement methods
+    pub fn mv_right(&mut self, l: Point) {
+        if l.x > self.location.x+1 {
+            self.location.x += 1
+        }
+    }
+    pub fn mv_up(&mut self) {
+        if self.location.y > 0 {
+            self.location.y -= 1
+        }
+    }
+    pub fn mv_down(&mut self, l: Point) {
+        if l.y > self.location.y+1 {
+            self.location.y += 1
+        }
+    }
+    pub fn mv_left(&mut self) {
+        if self.location.x > 0 {
+            self.location.x -= 1
+        }
+    }
+}
+
 #[derive(Clone, PartialEq)]
-pub struct Enemy {
-    pub status: Stats,
-    pub id: i8,
-    pub location: Point,
+pub enum Kind {
+    Character,
+    Enemy,
+    Pet,
 }
 
 #[derive(PartialEq)]
@@ -53,5 +79,9 @@ pub enum Symbol {
     Char,
     // CharRange,
     Background,
-    Unknown
+    Unknown,
 }
+
+// impl Symbol {
+//     pub fn color()
+// }
