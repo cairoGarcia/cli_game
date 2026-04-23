@@ -7,7 +7,7 @@ macro_rules! flush {
     }
 }
 
-use types::{Entity, Kind, Point, Stats, Symbol};
+use types::{Entity, Kind, Point, Stats, Symbol, Directions};
 
 // use serde::{Serialize, Deserialize};
 
@@ -82,16 +82,16 @@ fn main() {
 
         match ipt {
             "h" => {
-                character.mv_left();
+                character.mv(Directions::L, limits);
             }
             "j" => {
-                character.mv_down(limits);
+                character.mv(Directions::D, limits);
             }
             "k" => {
-                character.mv_up();
+                character.mv(Directions::U, limits);
             }
             "l" => {
-                character.mv_right(limits);
+                character.mv(Directions::R, limits);
             }
             _ => {
                 continue;
@@ -126,8 +126,6 @@ pub fn input() -> String {
 }
 
 pub fn action_checkout(char_loc: &Point, enemy_list: &Vec<Entity>) {
-    /* let new_enemy_list: Vec<Enemy> = Vec::new(); */
-
     for enemy in 0..enemy_list.len() {
         let result = path_to(char_loc, &enemy_list[enemy].location);
 
@@ -135,8 +133,6 @@ pub fn action_checkout(char_loc: &Point, enemy_list: &Vec<Entity>) {
             unsafe { HP -= 1 };
         };
     }
-
-    // new_enemy_list
 }
 
 pub fn enemy_action(enemy: &Point, character: &Point) -> Point {
@@ -204,7 +200,7 @@ pub fn path_to(player: &Point, enemy: &Point) -> i8 {
     } else {
         enemy.y - player.y
     };
-    return distance;
+    distance
 }
 
 pub fn render(character: &Entity, limits: &Point, enemy_list: &Vec<Entity>) {

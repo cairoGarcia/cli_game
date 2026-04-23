@@ -42,26 +42,13 @@ pub struct Entity {
 }
 
 impl Entity {
-    // Movement methods
-    pub fn mv_right(&mut self, l: Point) {
-        if l.x > self.location.x+1 {
-            self.location.x += 1
-        }
-    }
-    pub fn mv_up(&mut self) {
-        if self.location.y > 0 {
-            self.location.y -= 1
-        }
-    }
-    pub fn mv_down(&mut self, l: Point) {
-        if l.y > self.location.y+1 {
-            self.location.y += 1
-        }
-    }
-    pub fn mv_left(&mut self) {
-        if self.location.x > 0 {
-            self.location.x -= 1
-        }
+    pub fn mv(&mut self, d: Directions, l: Point) {
+        match d {
+            Directions::R => { if l.x > self.location.x+1 { self.location.x += 1 } },
+            Directions::L => { if self.location.x > 0 { self.location.x -= 1 } },
+            Directions::U => { if self.location.y > 0 { self.location.y -= 1 } },
+            Directions::D => { if l.y > self.location.y+1 { self.location.y += 1 } },
+        };
     }
 }
 
